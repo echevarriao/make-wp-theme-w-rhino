@@ -1,28 +1,30 @@
 /* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Licensed under the GPL 2.0
+ * Created by O. Echevarria, 
+ * 
  */
 
 importPackage(java.lang);
 importPackage(java.io);
 
-var tm = new ThemeMaker();
+var wp = new ThemeMaker();
 
-tm.initOutputInput();
+wp.initOutputInput();
 
-tm.gatherInformation();
+wp.gatherInformation();
 
-tm.makeParentDirectory();
-tm.makeDirectories();
-tm.makeTemplateFiles();
-tm.makeStyleSheet();
+wp.makeParentDirectory();
+wp.makeDirectories();
+wp.makeTemplateFiles();
+wp.makeStyleSheet();
+wp.makeDefaultContent();
+wp.makeFileReportStatus();
 
 
 function ThemeMaker(){
 
     this.gen_files = new Array('index.php', 'functions.php', 'content.php', 'header.php', 'footer.php', 'front-page.php');
-    this.cont_files = new Array('archive', 'author', 'aside', 'audio', 'gallery', 'image', 'link', 'page', 'quote', 'status', 'single', 'search', 'video');
+    this.cont_files = new Array('404', 'archive', 'author', 'aside', 'audio', 'gallery', 'image', 'link', 'page', 'quote', 'status', 'single', 'search', 'video');
     this.m_dirs = new Array("css", "images", "inc", "js", "frameworks", "customizer");
     this.m_themeName = "";
     this.m_themeDirectory = "";
@@ -30,6 +32,22 @@ function ThemeMaker(){
     this.pw = null;
     this.parentDirectoryObject = null;
     this.filesList = new Array();
+
+    this.makeFileReportStatus = function(){
+        
+        var i = 0;
+        
+        this.pw.println("Files Created");
+        
+        for(i = 0; i < this.filesList.length; i++){
+            
+            this.pw.println(this.filesList[i]);
+            
+        }
+        
+        return ;
+        
+    };
 
     this.makeDefaultContent = function(){
         
@@ -43,8 +61,58 @@ function ThemeMaker(){
             
         }
         
+        try{
+
+        tmpfs = new File(this.parentDirectoryObject, tmpfs_cont);
+
+        if(tmpfs.exists()){
+            
+//            this.pw.println("File created ==> " + tmpfs_cont); 
         
-    };
+        } 
+        
+        } catch(e){
+            
+            this.pw.println(e.toString());
+        }
+        
+        try{
+            
+        fileObj = new PrintStream(tmpfs);
+
+        fileObj.println("<?php");
+        fileObj.println("/** \n" 
++ " * The template part for displaying content \n"
++ " *\n"
++ " * @package WordPress\n"
++ " * @subpackage \n"
++ " * @since \n"
++ " */");
+        fileObj.println("");
+        fileObj.println("?>");
+
+        fileObj.println("<article id=\"post-<?php the_ID(); ?>\" <?php post_class(); ?>>");        
+        fileObj.println("\t<div class=\"entry-content\">");        
+        fileObj.println("	<header class=\"entry-header\">");        
+        fileObj.println("<?php the_title(); ?>");        
+        fileObj.println("	</header><!-- .entry-header -->");        
+        fileObj.println("<?php the_content(); ?>");        
+        fileObj.println("");        
+        fileObj.println("</div>");        
+        fileObj.println("<?php edit_post_link(sprintf(__( 'Edit<span class=\"screen-reader-text\"> \"%s\"</span>', 'twentysixteen' ),get_the_title()),'<span class=\"edit-link\">','</span>'); ?>");        
+        fileObj.println("</article><!-- #post-<?php the_ID(); ?> -->");        
+        
+        fileObj.close();
+        
+        this.filesList[this.filesList.length] = this.parentDirectoryObject + "/" + tmpfs_cont;
+
+        } catch(e){
+            
+        this.pw.println("Error creating " + this.parentDirectoryObject + "/" +  tmpfs_cont);
+            
+        }
+        
+        };
 
     this.makeStyleSheet = function(){
         
@@ -61,15 +129,6 @@ function ThemeMaker(){
         try{
 
         tmpfs = new File(this.parentDirectoryObject, tmpfs_cont);
-
-        if(tmpfs.exists()){
-            
-            this.pw.println("File created ==> " + tmpfs_cont); 
-        
-        } else {
-            
-            
-        }
         
         } catch(e){
             
@@ -103,7 +162,7 @@ function ThemeMaker(){
 
         fileObj.close();
         
-        this.pw.println("File created ==> " + this.parentDirectoryObject + "/" + tmpfs_cont); 
+        this.filesList[this.filesList.length] = this.parentDirectoryObject + "/" + tmpfs_cont;
 
         } catch(e){
             
@@ -111,9 +170,7 @@ function ThemeMaker(){
             
         }
         
-        this.pw.println(this.parentDirectoryObject);
-        
-    }
+    };
     
     this.makeTemplateFiles = function(){
         
@@ -137,7 +194,7 @@ function ThemeMaker(){
                 
                 if(tmpfs.exists()){
                     
-                   this.pw.println("File created ==> " + this.parentDirectoryObject + "/" +  this.gen_files[i]); 
+//                   this.pw.println("File created ==> " + this.parentDirectoryObject + "/" +  this.gen_files[i]); 
                     
                 }
                 
@@ -167,10 +224,12 @@ function ThemeMaker(){
                 fileObj.println("");
 
                 fileObj.close();
+                
+                this.filesList[this.filesList.length] = this.parentDirectoryObject + "/" + this.cont_files[i] + ".php";
 
                 if(tmpfs.exists()){
                     
-                   this.pw.println("File created ==> " + this.parentDirectoryObject + "/" + this.cont_files[i] + ".php"); 
+//                   this.pw.println("File created ==> " + this.parentDirectoryObject + "/" + this.cont_files[i] + ".php"); 
                     
                 }
                 
@@ -179,7 +238,7 @@ function ThemeMaker(){
 
                 if(tmpfs_cont.exists()){
                     
-                    this.pw.println("File created ==> " + this.parentDirectoryObject + "/" + "content-" + this.cont_files[i] + ".php");
+//                    this.pw.println("File created ==> " + this.parentDirectoryObject + "/" + "content-" + this.cont_files[i] + ".php");
                     
                 }
                 
@@ -193,6 +252,8 @@ function ThemeMaker(){
                 
                 fileObj.close();
                 
+                this.filesList[this.filesList.length] = this.parentDirectoryObject + "/" + "content-" + this.cont_files[i] + ".php";
+                
             }
         
         } catch(e){
@@ -202,7 +263,6 @@ function ThemeMaker(){
         }
         
     };
-
 
     this.initOutputInput = function(){
         
@@ -295,11 +355,4 @@ function ThemeMaker(){
         
     };
     
-    this.makeFiles = function(){
-        
-        
-        
-    };
-    
 }
-
